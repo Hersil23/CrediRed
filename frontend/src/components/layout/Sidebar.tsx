@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import {
   LayoutDashboard,
@@ -46,11 +47,10 @@ export default function Sidebar() {
 
   const navContent = (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-700">
-        <Link href="/dashboard" className="text-2xl font-bold">
-          <span className="text-white">Credi</span>
-          <span className="text-emerald-400">Red</span>
+      {/* Logo arriba */}
+      <div className="px-4 py-4 border-b border-gray-700">
+        <Link href="/dashboard">
+          <Image src="/logo.svg" alt="CrediRed" width={160} height={40} priority />
         </Link>
       </div>
 
@@ -90,6 +90,12 @@ export default function Sidebar() {
           </div>
         </div>
       )}
+
+      {/* Logo abajo */}
+      <div className="px-4 py-3 border-t border-gray-700 flex items-center justify-center">
+        <Image src="/logo-icon.svg" alt="CrediRed" width={28} height={28} className="opacity-40" />
+        <span className="ml-2 text-xs text-gray-500">CrediRed v1.0</span>
+      </div>
     </div>
   );
 

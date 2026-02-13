@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50" fill="none">
+  <!-- Icono: moneda/red estilizada -->
+  <circle cx="25" cy="25" r="20" fill="#10B981" opacity="0.15"/>
+  <circle cx="25" cy="25" r="14" fill="#10B981" opacity="0.3"/>
+  <circle cx="25" cy="25" r="8" fill="#10B981"/>
+  <!-- Nodos de red -->
+  <circle cx="10" cy="10" r="3" fill="#10B981"/>
+  <circle cx="40" cy="10" r="3" fill="#10B981"/>
+  <circle cx="10" cy="40" r="3" fill="#10B981"/>
+  <circle cx="40" cy="40" r="3" fill="#10B981"/>
+  <!-- Líneas de conexión -->
+  <line x1="13" y1="12" x2="22" y2="20" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="37" y1="12" x2="28" y2="20" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="13" y1="38" x2="22" y2="30" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <line x1="37" y1="38" x2="28" y2="30" stroke="#10B981" stroke-width="1.5" opacity="0.5"/>
+  <!-- Signo $ -->
+  <text x="25" y="30" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="Arial">$</text>
+  <!-- Texto CrediRed -->
+  <text x="58" y="33" font-family="Arial, sans-serif" font-size="26" font-weight="bold">
+    <tspan fill="#1F2937">Credi</tspan><tspan fill="#10B981">Red</tspan>
+  </text>
+</svg>

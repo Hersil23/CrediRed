@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -108,30 +108,26 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password antes de guardar
 userSchema.pre('save', async function() {
   if (!this.isModified('password')) return;
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Generar inviteCode antes de guardar
 userSchema.pre('save', function() {
   if (!this.inviteCode) {
     this.inviteCode = this._id.toString().slice(-6) + Math.random().toString(36).slice(2, 8);
   }
 });
 
-// Generar trialEndsAt al crear
 userSchema.pre('save', function() {
   if (this.isNew && this.status === 'trial' && !this.trialEndsAt) {
     this.trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
   }
 });
 
-// Comparar contraseña
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function(candidatePassword: string) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.models.User || mongoose.model('User', userSchema);
