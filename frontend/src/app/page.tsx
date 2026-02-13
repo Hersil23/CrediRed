@@ -242,22 +242,32 @@ export default function HomePage() {
         <div className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/10 border border-emerald-500/20 rounded-2xl p-10 text-center">
           <h2 className="text-3xl font-bold mb-4">Simple y accesible</h2>
           <p className="text-gray-400 mb-6 max-w-lg mx-auto">
-            Prueba 15 dias gratis con todas las funciones. Luego solo <span className="text-emerald-400 font-bold text-2xl">$7/mes</span> para acceso completo.
+            Prueba 15 dias gratis con todas las funciones. Para activar tu suscripcion, contacta a tu distribuidor autorizado.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <CheckCircle size={16} className="text-emerald-400" /> Sin tarjeta de credito
+              <CheckCircle size={16} className="text-emerald-400" /> 15 dias gratis
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <CheckCircle size={16} className="text-emerald-400" /> Cancela cuando quieras
+              <CheckCircle size={16} className="text-emerald-400" /> Sin tarjeta de credito
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <CheckCircle size={16} className="text-emerald-400" /> Soporte incluido
             </div>
           </div>
-          <Link href="/register" className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-lg font-medium transition">
-            Comenzar prueba gratuita
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link href="/register" className="inline-block bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-lg font-medium transition">
+              Comenzar prueba gratuita
+            </Link>
+            <a
+              href="https://wa.me/584145116337?text=Hola%2C%20quiero%20activar%20mi%20suscripcion%20en%20CrediRed"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block border border-green-500 text-green-400 hover:bg-green-500/10 px-8 py-3 rounded-lg font-medium transition"
+            >
+              Contactar distribuidor
+            </a>
+          </div>
         </div>
       </section>
 
