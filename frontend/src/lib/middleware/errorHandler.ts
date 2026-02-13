@@ -5,7 +5,7 @@ export function handleError(err: any) {
   console.error(err);
 
   if (err.name === 'ValidationError') {
-    const messages = Object.values(err.errors).map((e: { message?: string }) => e.message || '');
+    const messages = Object.values(err.errors).map((e: unknown) => (e as { message?: string }).message || '');
     return NextResponse.json({ message: messages.join(', ') }, { status: 400 });
   }
 
