@@ -130,16 +130,17 @@ export default function HomePage() {
           <span className="text-emerald-400 text-sm font-medium">15 dias gratis — sin tarjeta de credito</span>
         </div>
         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-          Administra tu red de ventas<br />
-          <span className="text-emerald-400">como Tendencias, Avon</span><br />
-          y cualquier empresa
+          Controla tus ventas y cobros<br />
+          <span className="text-emerald-400">como un profesional</span>
         </h1>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto mb-4">
-          La plataforma para vendedores y redes de distribucion.
+          Ideal para emprendedores, vendedores independientes y redes de distribucion
+          como Tendencias, Avon o tu propia empresa.
           Controla tu inventario, registra ventas a credito, cobra a tiempo y haz crecer tu red.
         </p>
         <p className="text-base text-gray-500 max-w-xl mx-auto mb-10">
-          Nombra tu empresa, personaliza los niveles de tu red y gestiona todo desde un solo lugar.
+          Tanto si vendes solo como si manejas una red, CrediRed se adapta a ti.
+          Nombra tu empresa, personaliza niveles y gestiona todo desde un solo lugar.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link href="/register" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3.5 rounded-lg text-lg font-medium transition flex items-center gap-2">
