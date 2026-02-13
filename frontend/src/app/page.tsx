@@ -20,7 +20,7 @@ const features = [
   {
     icon: Users,
     title: 'Red multinivel',
-    description: 'Crea tu red de distribuidores con hasta 5 niveles jerarquicos personalizables.'
+    description: 'Organiza tu red en niveles: Empresarial, Gerente, Lider, Distribuidor y Emprendedor. Personaliza los nombres segun tu empresa.'
   },
   {
     icon: Receipt,
