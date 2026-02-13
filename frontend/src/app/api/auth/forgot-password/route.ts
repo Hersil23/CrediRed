@@ -1,5 +1,7 @@
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import sendEmail from '@/lib/utils/sendEmail';
@@ -15,8 +17,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'No existe una cuenta con ese correo' }, { status: 404 });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetToken = randomBytes(32).toString('hex');
+    user.resetPasswordToken = createHash('sha256').update(resetToken).digest('hex');
     user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;
     await user.save();
 

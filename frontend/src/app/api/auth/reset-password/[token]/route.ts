@@ -1,5 +1,7 @@
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { createHash } from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import generateToken from '@/lib/utils/generateToken';
@@ -9,7 +11,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ toke
   try {
     await connectDB();
     const { token } = await params;
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
