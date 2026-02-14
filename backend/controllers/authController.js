@@ -4,6 +4,7 @@ const Network = require('../models/Network');
 const Notification = require('../models/Notification');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
+const { welcomeEmail, resetPasswordEmail, newNetworkMemberEmail } = require('../utils/emailTemplates');
 
 const ROLE_HIERARCHY = {
   empresarial: 'gerente',
@@ -83,24 +84,28 @@ exports.register = async (req, res, next) => {
         message: `${name} se unió a tu red`,
         relatedUser: user._id
       });
+
+      // Email al sponsor
+      try {
+        const sponsor = await User.findById(parentUser);
+        if (sponsor && sponsor.email) {
+          const sponsorEmail = newNetworkMemberEmail({
+            sponsorName: sponsor.name,
+            newMemberName: name,
+            newMemberRole: role
+          });
+          await sendEmail({ to: sponsor.email, ...sponsorEmail });
+        }
+      } catch (emailError) {
+        console.error('Error enviando email al sponsor:', emailError.message);
+      }
     }
 
     // Email de bienvenida
     try {
-      await sendEmail({
-        to: email,
-        subject: 'Bienvenido a CrediRed',
-        html: `
-          <h2>¡Bienvenido a CrediRed, ${name}!</h2>
-          <p>Tu cuenta ha sido creada exitosamente.</p>
-          <p>Ya puedes comenzar a gestionar tus ventas y créditos.</p>
-          <p>Tienes 15 días de prueba gratuita.</p>
-          <br>
-          <p>— El equipo de CrediRed</p>
-        `
-      });
+      const welcome = welcomeEmail({ name });
+      await sendEmail({ to: email, ...welcome });
     } catch (emailError) {
-      // No bloquear registro si falla el email
       console.error('Error enviando email de bienvenida:', emailError.message);
     }
 
@@ -202,20 +207,8 @@ exports.forgotPassword = async (req, res, next) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     try {
-      await sendEmail({
-        to: user.email,
-        subject: 'CrediRed - Recuperar contraseña',
-        html: `
-          <h2>Recuperar contraseña</h2>
-          <p>Hola ${user.name},</p>
-          <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-          <p><a href="${resetUrl}" style="background:#10B981;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;">Restablecer contraseña</a></p>
-          <p>Este enlace expira en 30 minutos.</p>
-          <p>Si no solicitaste esto, ignora este correo.</p>
-          <br>
-          <p>— El equipo de CrediRed</p>
-        `
-      });
+      const resetEmail = resetPasswordEmail({ name: user.name, resetUrl });
+      await sendEmail({ to: user.email, ...resetEmail });
 
       res.json({ message: 'Se envió un correo con las instrucciones' });
     } catch (emailError) {

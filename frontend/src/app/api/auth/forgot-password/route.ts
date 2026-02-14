@@ -5,6 +5,7 @@ import { randomBytes, createHash } from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import sendEmail from '@/lib/utils/sendEmail';
+import { resetPasswordEmail } from '@/lib/utils/emailTemplates';
 import { handleError } from '@/lib/middleware/errorHandler';
 
 export async function POST(req: NextRequest) {
@@ -26,11 +27,8 @@ export async function POST(req: NextRequest) {
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     try {
-      await sendEmail({
-        to: user.email,
-        subject: 'CrediRed - Recuperar contraseña',
-        html: `<h2>Recuperar contraseña</h2><p>Hola ${user.name},</p><p>Recibimos una solicitud para restablecer tu contraseña.</p><p><a href="${resetUrl}" style="background:#10B981;color:white;padding:10px 20px;border-radius:5px;text-decoration:none;">Restablecer contraseña</a></p><p>Este enlace expira en 30 minutos.</p><p>Si no solicitaste esto, ignora este correo.</p><br><p>— El equipo de CrediRed</p>`
-      });
+      const resetEmail = resetPasswordEmail({ name: user.name, resetUrl });
+      await sendEmail({ to: user.email, ...resetEmail });
 
       return NextResponse.json({ message: 'Se envió un correo con las instrucciones' });
     } catch {

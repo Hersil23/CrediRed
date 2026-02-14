@@ -1,7 +1,11 @@
 const Payment = require('../models/Payment');
 const Sale = require('../models/Sale');
+const User = require('../models/User');
+const Client = require('../models/Client');
 const Notification = require('../models/Notification');
 const { toUSD } = require('../utils/exchangeRate');
+const sendEmail = require('../utils/sendEmail');
+const { paymentReceivedEmail, debtSettledEmail } = require('../utils/emailTemplates');
 
 // POST /api/payments
 exports.createPayment = async (req, res, next) => {
@@ -50,6 +54,44 @@ exports.createPayment = async (req, res, next) => {
         message: `Se registró un abono de $${amountUSD.toFixed(2)} USD`,
         relatedSale: sale._id
       });
+    }
+
+    // Email al vendedor
+    try {
+      const seller = await User.findById(sale.seller);
+      if (seller && seller.email) {
+        const remaining = sale.totalAmount - sale.paidAmount;
+
+        if (sale.status === 'saldado') {
+          // Obtener nombre del cliente/comprador
+          let clientOrBuyerName = 'Cliente';
+          if (sale.buyer) {
+            const buyer = await User.findById(sale.buyer);
+            if (buyer) clientOrBuyerName = buyer.name;
+          } else if (sale.client) {
+            const client = await Client.findById(sale.client);
+            if (client) clientOrBuyerName = client.name;
+          }
+
+          const settledEmail = debtSettledEmail({
+            sellerName: seller.name,
+            totalAmount: sale.totalAmount,
+            clientOrBuyerName
+          });
+          await sendEmail({ to: seller.email, ...settledEmail });
+        } else {
+          const payEmail = paymentReceivedEmail({
+            sellerName: seller.name,
+            amount: amountUSD,
+            totalAmount: sale.totalAmount,
+            paidAmount: sale.paidAmount,
+            remaining
+          });
+          await sendEmail({ to: seller.email, ...payEmail });
+        }
+      }
+    } catch (emailError) {
+      console.error('Error enviando email de pago:', emailError.message);
     }
 
     res.status(201).json({

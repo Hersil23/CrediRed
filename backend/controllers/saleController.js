@@ -5,6 +5,8 @@ const User = require('../models/User');
 const Notification = require('../models/Notification');
 const calculateDueDate = require('../utils/calculateDueDate');
 const { toUSD } = require('../utils/exchangeRate');
+const sendEmail = require('../utils/sendEmail');
+const { saleConfirmationEmail, networkSaleEmail } = require('../utils/emailTemplates');
 
 // POST /api/sales
 exports.createSale = async (req, res, next) => {
@@ -115,6 +117,49 @@ exports.createSale = async (req, res, next) => {
         relatedSale: sale._id,
         relatedUser: req.user._id
       });
+
+      // Email al comprador de red
+      try {
+        const buyer = await User.findById(buyerId);
+        if (buyer && buyer.email) {
+          const netEmail = networkSaleEmail({
+            buyerName: buyer.name,
+            sellerName: req.user.name,
+            items: saleItems,
+            totalAmount,
+            paymentType,
+            creditTerm: paymentType === 'credito' ? creditData : undefined
+          });
+          await sendEmail({ to: buyer.email, ...netEmail });
+        }
+      } catch (emailError) {
+        console.error('Error enviando email de mercancía al comprador:', emailError.message);
+      }
+    }
+
+    // Email de confirmación al vendedor
+    try {
+      let clientOrBuyerName = '';
+      if (type === 'detal' && clientId) {
+        const client = await Client.findById(clientId);
+        clientOrBuyerName = client ? client.name : 'Cliente';
+      } else if (type === 'red' && buyerId) {
+        const buyer = await User.findById(buyerId);
+        clientOrBuyerName = buyer ? buyer.name : 'Comprador';
+      }
+
+      const saleEmail = saleConfirmationEmail({
+        sellerName: req.user.name,
+        clientOrBuyerName,
+        type,
+        paymentType,
+        items: saleItems,
+        totalAmount,
+        creditTerm: paymentType === 'credito' ? creditData : undefined
+      });
+      await sendEmail({ to: req.user.email, ...saleEmail });
+    } catch (emailError) {
+      console.error('Error enviando email de confirmación de venta:', emailError.message);
     }
 
     res.status(201).json({ sale });

@@ -4,6 +4,7 @@ import User from '@/lib/models/User';
 import Notification from '@/lib/models/Notification';
 import generateToken from '@/lib/utils/generateToken';
 import sendEmail from '@/lib/utils/sendEmail';
+import { welcomeEmail, newNetworkMemberEmail } from '@/lib/utils/emailTemplates';
 import { handleError } from '@/lib/middleware/errorHandler';
 
 const ROLE_HIERARCHY: Record<string, string> = {
@@ -66,14 +67,27 @@ export async function POST(req: NextRequest) {
         message: `${name} se unió a tu red`,
         relatedUser: user._id
       });
+
+      // Email al sponsor
+      try {
+        const sponsor = await User.findById(parentUser);
+        if (sponsor?.email) {
+          const sponsorEmail = newNetworkMemberEmail({
+            sponsorName: sponsor.name,
+            newMemberName: name,
+            newMemberRole: role
+          });
+          await sendEmail({ to: sponsor.email, ...sponsorEmail });
+        }
+      } catch (emailError) {
+        console.error('Error enviando email al sponsor:', emailError);
+      }
     }
 
+    // Email de bienvenida
     try {
-      await sendEmail({
-        to: email,
-        subject: 'Bienvenido a CrediRed',
-        html: `<h2>¡Bienvenido a CrediRed, ${name}!</h2><p>Tu cuenta ha sido creada exitosamente.</p><p>Tienes 15 días de prueba gratuita.</p><p>— El equipo de CrediRed</p>`
-      });
+      const welcome = welcomeEmail({ name });
+      await sendEmail({ to: email, ...welcome });
     } catch (emailError) {
       console.error('Error enviando email de bienvenida:', emailError);
     }
