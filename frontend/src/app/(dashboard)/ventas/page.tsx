@@ -7,7 +7,7 @@ import { fetchRates, formatCurrency } from '@/lib/currency';
 import Card from '@/components/ui/Card';
 import StatusBadge from '@/components/ui/StatusBadge';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Plus, MessageCircle } from 'lucide-react';
+import { Plus, MessageCircle, Trash2 } from 'lucide-react';
 
 export default function VentasPage() {
   const { user } = useAuth();
@@ -26,12 +26,40 @@ export default function VentasPage() {
     paymentType: 'contado',
     clientId: '',
     buyerId: '',
-    productId: '',
-    quantity: '1',
-    unitPrice: '',
     creditUnit: 'quincena',
     creditQuantity: '1'
   });
+
+  // Multi-producto
+  const [saleItems, setSaleItems] = useState<{ productId: string; productName: string; quantity: number; unitPrice: number; stock: number }[]>([]);
+  const [currentItem, setCurrentItem] = useState({ productId: '', quantity: '1', unitPrice: '' });
+
+  const addItem = () => {
+    const p = products.find((pr: any) => pr._id === currentItem.productId);
+    if (!p || !currentItem.unitPrice || Number(currentItem.quantity) < 1) return;
+    const existing = saleItems.find(i => i.productId === currentItem.productId);
+    if (existing) {
+      setSaleItems(saleItems.map(i => i.productId === currentItem.productId
+        ? { ...i, quantity: i.quantity + Number(currentItem.quantity), unitPrice: Number(currentItem.unitPrice) }
+        : i
+      ));
+    } else {
+      setSaleItems([...saleItems, {
+        productId: p._id,
+        productName: p.name,
+        quantity: Number(currentItem.quantity),
+        unitPrice: Number(currentItem.unitPrice),
+        stock: p.quantity
+      }]);
+    }
+    setCurrentItem({ productId: '', quantity: '1', unitPrice: '' });
+  };
+
+  const removeItem = (productId: string) => {
+    setSaleItems(saleItems.filter(i => i.productId !== productId));
+  };
+
+  const itemsTotal = saleItems.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0);
 
   const loadData = async () => {
     try {
@@ -79,17 +107,18 @@ export default function VentasPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saleItems.length === 0) return alert('Agrega al menos un producto');
     try {
       await api.post('/sales', {
         type: form.type,
         paymentType: form.paymentType,
         clientId: form.type === 'detal' ? form.clientId : undefined,
         buyerId: form.type === 'red' ? form.buyerId : undefined,
-        items: [{
-          productId: form.productId,
-          quantity: Number(form.quantity),
-          unitPrice: Number(form.unitPrice)
-        }],
+        items: saleItems.map(i => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice
+        })),
         currency,
         creditTerm: form.paymentType === 'credito' ? {
           unit: form.creditUnit,
@@ -97,6 +126,8 @@ export default function VentasPage() {
         } : undefined
       });
       setShowForm(false);
+      setSaleItems([]);
+      setCurrentItem({ productId: '', quantity: '1', unitPrice: '' });
       loadData();
     } catch (err: any) {
       alert(err.response?.data?.message || 'Error al registrar venta');
@@ -193,28 +224,67 @@ export default function VentasPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Producto</label>
-                <select value={form.productId} onChange={(e) => {
+            {/* Selector de productos */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">Productos</label>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_80px_120px_auto] gap-2 items-end">
+                <select value={currentItem.productId} onChange={(e) => {
                   const p = products.find((pr: any) => pr._id === e.target.value);
-                  setForm({ ...form, productId: e.target.value, unitPrice: p ? String(p.price) : '' });
+                  setCurrentItem({ ...currentItem, productId: e.target.value, unitPrice: p ? String(p.price) : '' });
                 }}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required>
-                  <option value="">Seleccionar</option>
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                  <option value="">Seleccionar producto</option>
                   {products.map((p: any) => <option key={p._id} value={p._id}>{p.name} (Stock: {p.quantity})</option>)}
                 </select>
+                <input type="number" value={currentItem.quantity} onChange={(e) => setCurrentItem({ ...currentItem, quantity: e.target.value })}
+                  placeholder="Cant." className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="1" />
+                <input type="number" value={currentItem.unitPrice} step="0.01" onChange={(e) => setCurrentItem({ ...currentItem, unitPrice: e.target.value })}
+                  placeholder={`Precio (${currency})`} className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" min="0" />
+                <button type="button" onClick={addItem}
+                  disabled={!currentItem.productId || !currentItem.unitPrice}
+                  className="px-3 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition disabled:opacity-40 disabled:cursor-not-allowed text-sm whitespace-nowrap">
+                  <Plus size={16} className="inline -mt-0.5" /> Agregar
+                </button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required min="1" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Precio unitario ({currency})</label>
-                <input type="number" value={form.unitPrice} step="0.01" onChange={(e) => setForm({ ...form, unitPrice: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" required min="0" />
-              </div>
+
+              {/* Lista de productos agregados */}
+              {saleItems.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-500 text-left">
+                        <th className="px-3 py-2 font-medium">Producto</th>
+                        <th className="px-3 py-2 font-medium text-center">Cant.</th>
+                        <th className="px-3 py-2 font-medium text-right">P. Unit.</th>
+                        <th className="px-3 py-2 font-medium text-right">Subtotal</th>
+                        <th className="px-3 py-2 w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {saleItems.map((item) => (
+                        <tr key={item.productId} className="border-t">
+                          <td className="px-3 py-2">{item.productName}</td>
+                          <td className="px-3 py-2 text-center">{item.quantity}</td>
+                          <td className="px-3 py-2 text-right">{item.unitPrice.toFixed(2)}</td>
+                          <td className="px-3 py-2 text-right font-medium">{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                          <td className="px-3 py-2 text-center">
+                            <button type="button" onClick={() => removeItem(item.productId)} className="text-red-500 hover:text-red-700">
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t bg-gray-50">
+                        <td colSpan={3} className="px-3 py-2 text-right font-medium text-gray-700">Total:</td>
+                        <td className="px-3 py-2 text-right font-bold text-emerald-600">{itemsTotal.toFixed(2)} {currency}</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
             </div>
 
             {form.paymentType === 'credito' && (
